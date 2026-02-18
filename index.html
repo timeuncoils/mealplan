@@ -12,9 +12,7 @@
   --line:#1a1a1d;
   --accent:#ff453a;
 }
-
 *{box-sizing:border-box}
-
 body{
   margin:0;
   background:var(--bg);
@@ -22,7 +20,6 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
 }
-
 .wrapper{
   max-width:720px;
   margin:0 auto;
@@ -31,53 +28,33 @@ body{
     28px
     calc(env(safe-area-inset-bottom) + 60px);
 }
-
 .header{
   font-size:14px;
-  letter-spacing:0.15em;
+  letter-spacing:.15em;
   text-transform:uppercase;
   color:var(--accent);
   margin-bottom:72px;
 }
-
-/* Notes */
-
 .note{
   padding:28px 0;
   border-bottom:1px solid var(--line);
-  animation:fade .3s ease both;
 }
-
-.note:last-child{
-  border-bottom:none;
-}
-
+.note:last-child{border-bottom:none}
 .note-text{
   font-size:20px;
   line-height:1.55;
-  font-weight:400;
 }
-
 .note-meta{
   margin-top:10px;
   font-size:12px;
   color:var(--muted);
-  letter-spacing:0.06em;
+  letter-spacing:.06em;
 }
-
-@keyframes fade{
-  from{opacity:0; transform:translateY(6px)}
-  to{opacity:1; transform:translateY(0)}
-}
-
-/* Composer */
-
 .composer{
   margin-top:80px;
   border-top:1px solid var(--line);
   padding-top:36px;
 }
-
 textarea{
   width:100%;
   border:none;
@@ -88,38 +65,26 @@ textarea{
   outline:none;
   color:var(--text);
 }
-
-textarea::placeholder{
-  color:var(--muted);
-}
-
+textarea::placeholder{color:var(--muted)}
 .actions{
   margin-top:18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
-
 .hint{
   font-size:12px;
   color:var(--muted);
 }
-
 .save{
   font-size:14px;
   text-transform:uppercase;
-  letter-spacing:0.12em;
+  letter-spacing:.12em;
   color:var(--accent);
   background:none;
   border:none;
-  padding:0;
   cursor:pointer;
 }
-
-.save:active{
-  opacity:0.6;
-}
-
 .empty{
   font-size:18px;
   color:var(--muted);
@@ -130,55 +95,52 @@ textarea::placeholder{
 <body>
 
 <div class="wrapper">
-
   <div class="header">Noted</div>
-
   <div id="notes"></div>
 
   <div class="composer">
     <textarea id="input" rows="1" placeholder="Write something..."></textarea>
-
     <div class="actions">
       <div class="hint">Ctrl + Enter to save</div>
-      <button class="save" onclick="saveNote()">Save</button>
+      <button class="save" id="saveBtn">Save</button>
     </div>
   </div>
-
 </div>
 
 <script>
-const OWNER = "timeuncoils";
-const REPO  = "noted";
-const DIR   = "notes";
+const OWNER="timeuncoils",
+      REPO="noted",
+      DIR="notes";
 
-let TOKEN = localStorage.getItem("noted_token") || "";
+const notesEl=document.getElementById("notes"),
+      input=document.getElementById("input"),
+      saveBtn=document.getElementById("saveBtn");
 
+let TOKEN=localStorage.getItem("noted_token")||"";
 if(!TOKEN){
-  TOKEN = prompt("GitHub Token:");
-  if(TOKEN) localStorage.setItem("noted_token", TOKEN);
+  TOKEN=prompt("GitHub Token:");
+  if(TOKEN) localStorage.setItem("noted_token",TOKEN);
 }
 
-const headers = () => ({
-  "Authorization": `token ${TOKEN}`,
-  "Accept": "application/vnd.github.v3+json"
-});
+const headers={
+  "Authorization":`token ${TOKEN}`,
+  "Accept":"application/vnd.github.v3+json"
+};
 
-const encode = s => btoa(unescape(encodeURIComponent(s)));
+const encode=s=>btoa(unescape(encodeURIComponent(s)));
 
 async function saveNote(){
-  const input = document.getElementById("input");
-  const text = input.value.trim();
+  const text=input.value.trim();
   if(!text) return;
 
   input.value="";
-  autoGrow(input);
+  autoGrow();
 
-  const id = Date.now();
-  const filename = `${DIR}/${id}.md`;
-  const created = new Date().toISOString();
+  const id=Date.now(),
+        created=new Date().toISOString(),
+        filename=`${DIR}/${id}.md`;
 
-  const content =
-`created: ${created}
+  const content=`created: ${created}
 id: ${id}
 
 ${text}
@@ -188,7 +150,7 @@ ${text}
     `https://api.github.com/repos/${OWNER}/${REPO}/contents/${filename}`,
     {
       method:"PUT",
-      headers:{...headers(),"Content-Type":"application/json"},
+      headers:{...headers,"Content-Type":"application/json"},
       body:JSON.stringify({
         message:`Add note ${id}`,
         content:encode(content)
@@ -201,83 +163,65 @@ ${text}
 
 async function loadNotes(){
   try{
-    const res = await fetch(
+    const res=await fetch(
       `https://api.github.com/repos/${OWNER}/${REPO}/contents/${DIR}`,
-      { headers: headers() }
+      {headers}
     );
 
     if(res.status===404){
-      document.getElementById("notes").innerHTML =
-        "<div class='empty'>No notes yet</div>";
+      notesEl.innerHTML="<div class='empty'>No notes yet</div>";
       return;
     }
 
-    const files = await res.json();
-    const mdFiles = files.filter(f=>f.name.endsWith(".md"));
+    const files=(await res.json())
+      .filter(f=>f.name.endsWith(".md"))
+      .sort((a,b)=>b.name.localeCompare(a.name));
 
-    const loaded = await Promise.all(
-      mdFiles.map(async f=>{
-        const r = await fetch(f.download_url);
-        const text = await r.text();
-        const id = parseInt(text.match(/id:\s*(\d+)/)?.[1]||0);
-        const created = text.match(/created:\s*(.+)/)?.[1]||"";
-        const body = text.split("\n\n").slice(1).join("\n").trim();
-        return {id,created,text:body};
+    const loaded=await Promise.all(
+      files.map(async f=>{
+        const t=await fetch(f.download_url).then(r=>r.text());
+        const created=(/created:\s*(.+)/.exec(t)||[])[1]||"";
+        const body=t.split("\n\n").slice(1).join("\n").trim();
+        return {created,text:body};
       })
     );
 
-    loaded.sort((a,b)=>b.id-a.id);
     render(loaded);
 
   }catch{
-    document.getElementById("notes").innerHTML =
-      "<div class='empty'>Load failed</div>";
+    notesEl.innerHTML="<div class='empty'>Load failed</div>";
   }
 }
 
-function render(notes){
-  const container = document.getElementById("notes");
-  container.innerHTML="";
-
-  if(!notes.length){
-    container.innerHTML =
-      "<div class='empty'>No notes yet</div>";
+function render(data){
+  if(!data.length){
+    notesEl.innerHTML="<div class='empty'>No notes yet</div>";
     return;
   }
 
-  notes.forEach(n=>{
-    const div=document.createElement("div");
-    div.className="note";
-    div.innerHTML=`
-      <div class="note-text">${escapeHtml(n.text)}</div>
+  notesEl.innerHTML=data.map(n=>`
+    <div class="note">
+      <div class="note-text">${escape(n.text)}</div>
       <div class="note-meta">${new Date(n.created).toLocaleString()}</div>
-    `;
-    container.appendChild(div);
-  });
+    </div>
+  `).join("");
 }
 
-function escapeHtml(str){
-  return str
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;");
+const escape=s=>s
+  .replace(/&/g,"&amp;")
+  .replace(/</g,"&lt;")
+  .replace(/>/g,"&gt;");
+
+function autoGrow(){
+  input.style.height="auto";
+  input.style.height=input.scrollHeight+"px";
 }
 
-/* Auto-grow textarea */
-const textarea=document.getElementById("input");
-textarea.addEventListener("input",()=>autoGrow(textarea));
-
-function autoGrow(el){
-  el.style.height="auto";
-  el.style.height=el.scrollHeight+"px";
-}
-
-/* Ctrl + Enter Save */
-textarea.addEventListener("keydown", e=>{
-  if((e.ctrlKey || e.metaKey) && e.key==="Enter"){
-    saveNote();
-  }
+input.addEventListener("input",autoGrow);
+input.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key==="Enter") saveNote();
 });
+saveBtn.onclick=saveNote;
 
 loadNotes();
 </script>
