@@ -1,230 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Noted</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b0b0c;
-  --text:#e9e9ea;
-  --muted:#6e6e73;
-  --line:#1a1a1d;
-  --accent:#ff453a;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased;
-}
-.wrapper{
-  max-width:720px;
-  margin:0 auto;
-  padding:
-    calc(env(safe-area-inset-top) + 64px)
-    28px
-    calc(env(safe-area-inset-bottom) + 60px);
-}
-.header{
-  font-size:14px;
-  letter-spacing:.15em;
-  text-transform:uppercase;
-  color:var(--accent);
-  margin-bottom:72px;
-}
-.note{
-  padding:28px 0;
-  border-bottom:1px solid var(--line);
-}
-.note:last-child{border-bottom:none}
-.note-text{
-  font-size:20px;
-  line-height:1.55;
-}
-.note-meta{
-  margin-top:10px;
-  font-size:12px;
-  color:var(--muted);
-  letter-spacing:.06em;
-}
-.composer{
-  margin-top:80px;
-  border-top:1px solid var(--line);
-  padding-top:36px;
-}
-textarea{
-  width:100%;
-  border:none;
-  background:transparent;
-  resize:none;
-  font-size:22px;
-  line-height:1.4;
-  outline:none;
-  color:var(--text);
-}
-textarea::placeholder{color:var(--muted)}
-.actions{
-  margin-top:18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-.hint{
-  font-size:12px;
-  color:var(--muted);
-}
-.save{
-  font-size:14px;
-  text-transform:uppercase;
-  letter-spacing:.12em;
-  color:var(--accent);
-  background:none;
-  border:none;
-  cursor:pointer;
-}
-.empty{
-  font-size:18px;
-  color:var(--muted);
-  padding:40px 0;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--s:#1a1a1a;--s2:#202020;--b:#282828;--b2:#333;--a:#e8d5a3;--ad:#7a6e55;--t:#d4cfc7;--m:#4a4845;--dt:#c07070}
+body{color:var(--t);font-family:'Geist Mono',monospace;font-size:14px;line-height:1.6;min-height:100vh;padding:48px 24px 80px;background:#141414}
+.w{max-width:640px;margin:0 auto}
+.hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:40px}
+.logo{font-family:'Instrument Serif',serif;font-size:28px;letter-spacing:-.02em}.logo em{font-style:italic;color:var(--a)}
+.hr{display:flex;align-items:center;gap:14px}
+.nc{font-size:11px;color:var(--m);text-transform:uppercase}
+.ss{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--m)}
+.sd{width:6px;height:6px;border-radius:50%;background:var(--b2);flex-shrink:0}
+.sd.synced{background:#7ecf99}.sd.syncing{background:var(--a);animation:pulse 1s infinite}.sd.error{background:var(--dt)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.ia{margin-bottom:40px}
+.tw{position:relative;margin-bottom:10px}
+textarea{width:100%;min-height:120px;padding:16px;background:var(--s);border:1px solid var(--b);border-radius:6px;color:var(--t);font-family:'Geist Mono',monospace;font-size:13px;line-height:1.7;resize:vertical;outline:none;caret-color:var(--a)}
+textarea::placeholder{color:var(--m)}textarea:focus{border-color:var(--b2);background:var(--s2)}
+.cc{position:absolute;bottom:10px;right:12px;font-size:10px;color:var(--m);pointer-events:none}
+.ac{display:flex;gap:8px;justify-content:flex-end;align-items:center}
+.ht{font-size:10px;color:var(--m);margin-right:auto}
+.btn{padding:9px 20px;background:var(--a);border:none;border-radius:4px;color:#0a0a0a;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s,transform .1s}
+.btn:hover{background:#f0e0b0}.btn:active{transform:scale(.97)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-o{padding:6px 12px;background:transparent;border:1px solid var(--b2);border-radius:4px;color:var(--m);font-family:'Geist Mono',monospace;font-size:10px;text-transform:uppercase;cursor:pointer;transition:color .2s,border-color .2s}
+.btn-o:hover{color:var(--a);border-color:var(--ad)}
+.dv{display:flex;align-items:center;gap:12px;margin-bottom:24px}.dl{flex:1;height:1px;background:var(--b)}.dv span{font-size:10px;color:var(--m);text-transform:uppercase}
+.nl{display:flex;flex-direction:column;gap:10px}
+.nc2{background:var(--s);border:1px solid var(--b);border-radius:6px;padding:14px 16px;display:flex;gap:14px;align-items:flex-start;animation:su .3s ease both}
+.nc2:hover{border-color:var(--b2);background:var(--s2)}
+.nb{flex:1}.nt{font-size:13px;line-height:1.65;word-break:break-word;white-space:pre-wrap}
+.nm{display:flex;align-items:center;gap:10px;margin-top:8px}
+.nti{font-size:10px;color:var(--m)}
+.ntg{font-size:9px;text-transform:uppercase;color:var(--ad);background:var(--s);border:1px solid var(--b);border-radius:3px;padding:1px 6px}
+.na{display:flex;gap:6px;flex-shrink:0}
+.bi{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:1px solid transparent;border-radius:4px;cursor:pointer;color:var(--m);font-size:13px;font-family:'Geist Mono',monospace}
+.bi:hover{background:var(--b);color:var(--t);border-color:var(--b2)}.bi.d:hover{background:var(--del);color:var(--dt);border-color:#5a2a2a}
+.em{text-align:center;padding:60px 20px;color:var(--m)}.em-i{font-family:'Instrument Serif',serif;font-size:40px;font-style:italic;color:var(--b2);margin-bottom:12px}.em p{font-size:12px;letter-spacing:.08em}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s2);border:1px solid var(--b2);color:var(--t);padding:10px 20px;border-radius:4px;font-size:11px;opacity:0;transition:transform .25s,opacity .25s;pointer-events:none;z-index:100;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;padding:20px}.mo.show{display:grid;place-items:center}
+.md{background:var(--s2);border:1px solid var(--b2);border-radius:6px;padding:28px;width:min(420px,100%);animation:su .3s ease both}
+.md h3{font-family:'Instrument Serif',serif;font-size:22px;font-style:italic;color:var(--a);margin-bottom:8px}
+.md p{font-size:11px;color:var(--m);line-height:1.7;margin-bottom:20px}.md p a{color:var(--a);text-decoration:none}.md p a:hover{text-decoration:underline}
+.md input{width:100%;padding:12px 14px;background:#141414;border:1px solid var(--b);border-radius:4px;color:var(--t);font-family:'Geist Mono',monospace;font-size:12px;margin-bottom:12px;outline:none;caret-color:var(--a)}
+.md input:focus{border-color:var(--b2)}.md input::placeholder{color:var(--m)}
+.mb{width:100%;padding:12px;background:var(--a);border:none;border-radius:4px;color:#0a0a0a;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;transition:background .2s}.mb:hover{background:#f0e0b0}
+
+@keyframes su{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:480px){body{padding:28px 16px 60px}.logo{font-size:22px}}
 </style>
 </head>
 <body>
-
-<div class="wrapper">
-  <div class="header">Noted</div>
-  <div id="notes"></div>
-
-  <div class="composer">
-    <textarea id="input" rows="1" placeholder="Write something..."></textarea>
-    <div class="actions">
-      <div class="hint">Ctrl + Enter to save</div>
-      <button class="save" id="saveBtn">Save</button>
-    </div>
-  </div>
+<div class="mo" id="M"><div class="md"><h3>connect</h3><p>Enter your GitHub Personal Access Token to sync notes.<br><br>Create one at <a href="https://github.com/settings/tokens" target="_blank">github.com → Settings → Developer Settings → Personal Access Tokens (classic)</a>. Enable <strong>public_repo</strong>.</p><input type="password" id="TI" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"><button class="mb" onclick="saveTok()">Connect</button></div></div>
+<div class="w">
+  <div class="hd"><div class="logo"><em>noted</em></div><div class="hr"><div class="ss"><span class="sd" id="SD"></span><span id="ST">loading</span></div><div class="nc" id="NC"></div><button class="btn-o" onclick="showM()">Token</button></div></div>
+  <div class="ia"><div class="tw"><textarea id="NI" placeholder="what's on your mind..." maxlength="2000"></textarea><span class="cc" id="CC">0 / 2000</span></div><div class="ac"><span class="ht">⌘ + Enter to save</span><button class="btn" id="SB" onclick="save()" disabled>Save</button></div></div>
+  <div class="dv" id="DV" style="display:none"><div class="dl"></div><span>Notes</span><div class="dl"></div></div>
+  <div class="nl" id="NL"></div>
 </div>
-
+<div class="toast" id="T"></div>
 <script>
-const OWNER="timeuncoils",
-      REPO="noted",
-      DIR="notes";
-
-const notesEl=document.getElementById("notes"),
-      input=document.getElementById("input"),
-      saveBtn=document.getElementById("saveBtn");
-
-let TOKEN=localStorage.getItem("noted_token")||"";
-if(!TOKEN){
-  TOKEN=prompt("GitHub Token:");
-  if(TOKEN) localStorage.setItem("noted_token",TOKEN);
-}
-
-const headers={
-  "Authorization":`token ${TOKEN}`,
-  "Accept":"application/vnd.github.v3+json"
-};
-
-const encode=s=>btoa(unescape(encodeURIComponent(s)));
-
-async function saveNote(){
-  const text=input.value.trim();
-  if(!text) return;
-
-  input.value="";
-  autoGrow();
-
-  const id=Date.now(),
-        created=new Date().toISOString(),
-        filename=`${DIR}/${id}.md`;
-
-  const content=`created: ${created}
-id: ${id}
-
-${text}
-`;
-
-  await fetch(
-    `https://api.github.com/repos/${OWNER}/${REPO}/contents/${filename}`,
-    {
-      method:"PUT",
-      headers:{...headers,"Content-Type":"application/json"},
-      body:JSON.stringify({
-        message:`Add note ${id}`,
-        content:encode(content)
-      })
-    }
-  );
-
-  loadNotes();
-}
-
-async function loadNotes(){
-  try{
-    const res=await fetch(
-      `https://api.github.com/repos/${OWNER}/${REPO}/contents/${DIR}`,
-      {headers}
-    );
-
-    if(res.status===404){
-      notesEl.innerHTML="<div class='empty'>No notes yet</div>";
-      return;
-    }
-
-    const files=(await res.json())
-      .filter(f=>f.name.endsWith(".md"))
-      .sort((a,b)=>b.name.localeCompare(a.name));
-
-    const loaded=await Promise.all(
-      files.map(async f=>{
-        const t=await fetch(f.download_url).then(r=>r.text());
-        const created=(/created:\s*(.+)/.exec(t)||[])[1]||"";
-        const body=t.split("\n\n").slice(1).join("\n").trim();
-        return {created,text:body};
-      })
-    );
-
-    render(loaded);
-
-  }catch{
-    notesEl.innerHTML="<div class='empty'>Load failed</div>";
-  }
-}
-
-function render(data){
-  if(!data.length){
-    notesEl.innerHTML="<div class='empty'>No notes yet</div>";
-    return;
-  }
-
-  notesEl.innerHTML=data.map(n=>`
-    <div class="note">
-      <div class="note-text">${escape(n.text)}</div>
-      <div class="note-meta">${new Date(n.created).toLocaleString()}</div>
-    </div>
-  `).join("");
-}
-
-const escape=s=>s
-  .replace(/&/g,"&amp;")
-  .replace(/</g,"&lt;")
-  .replace(/>/g,"&gt;");
-
-function autoGrow(){
-  input.style.height="auto";
-  input.style.height=input.scrollHeight+"px";
-}
-
-input.addEventListener("input",autoGrow);
-input.addEventListener("keydown",e=>{
-  if((e.ctrlKey||e.metaKey)&&e.key==="Enter") saveNote();
-});
-saveBtn.onclick=saveNote;
-
-loadNotes();
+const O='timeuncoils',R='noted',F='notes.md';
+let TOK=localStorage.getItem('noted_token')||'',notes=[],sha=null;
+const $=id=>document.getElementById(id),ni=$('NI'),cc=$('CC'),nl=$('NL'),dv=$('DV'),nc=$('NC'),sb=$('SB'),sd=$('SD'),st=$('ST');
+const sync=(s,l)=>{sd.className=`sd ${s}`;st.textContent=l};
+const hdr=()=>({'Authorization':`token ${TOK}`,'Accept':'application/vnd.github.v3+json'});
+const dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),c=>c.charCodeAt(0)));
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const toast=m=>{const t=$('T');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2200)};
+const url=`https://api.github.com/repos/${O}/${R}/contents/${F}`;
+async function ghGet(){const r=await fetch(url,{headers:hdr()});if(r.status===404)return null;if(!r.ok)throw Error(r.status);return r.json()}
+async function ghPut(c){const l=await ghGet();if(l)sha=l.sha;const b={message:`Update ${F}`,content:btoa(unescape(encodeURIComponent(c)))};if(sha)b.sha=sha;const r=await fetch(url,{method:'PUT',headers:{...hdr(),'Content-Type':'application/json'},body:JSON.stringify(b)});if(!r.ok)throw Error(r.status);sha=(await r.json()).content.sha}
+const toMd=ns=>['# Noted\n',...ns.flatMap(n=>[`## ${n.c}`,`id: ${n.id}\n`,n.t,'\n---\n'])].join('\n');
+const fromMd=md=>md.split('\n---\n').filter(b=>b.trim()&&!b.startsWith('# ')).reduce((a,b)=>{const ls=b.trim().split('\n'),dl=ls.find(l=>l.startsWith('## ')),il=ls.find(l=>l.startsWith('id: '));if(!dl||!il)return a;const t=ls.slice(ls.indexOf(il)+1).join('\n').trim();if(t)a.push({id:+il.slice(4),c:dl.slice(3).trim(),t});return a},[]);
+function saveTok(){const v=$('TI').value.trim();if(!v)return;TOK=v;localStorage.setItem('noted_token',v);$('M').classList.remove('show');toast('Connected!');load()}
+const showM=()=>{$('TI').value='';$('M').classList.add('show')};
+async function load(){if(!TOK){sync('error','no token');showM();return}sync('syncing','loading');try{const f=await ghGet();notes=f?fromMd(dec(f.content)):[];if(f)sha=f.sha;render();sync('synced','synced')}catch(e){sync('error','offline');toast('Could not load')}}
+async function save(){if(!TOK){showM();return}const t=ni.value.trim();if(!t)return;ni.value='';cc.textContent='0 / 2000';sb.disabled=true;sync('syncing','saving');try{const l=await ghGet();if(l){sha=l.sha;notes=fromMd(dec(l.content))}notes.unshift({id:Date.now(),t,c:new Date().toISOString()});render();await ghPut(toMd(notes));sync('synced','synced');toast('Saved')}catch(e){sync('error','sync failed');toast('Save failed')}}
+async function del(id){notes=notes.filter(n=>n.id!==id);render();sync('syncing','saving');try{await ghPut(toMd(notes));sync('synced','synced');toast('Deleted')}catch(e){sync('error','sync failed');toast('Delete failed')}}
+const copy=t=>navigator.clipboard.writeText(t).then(()=>toast('Copied'));
+function render(){nl.innerHTML='';const n=notes.length;nc.textContent=n?`${n} note${n>1?'s':''}`:'';dv.style.display=n?'flex':'none';if(!n){nl.innerHTML='<div class="em"><div class="em-i">∅</div><p>no notes yet</p></div>';return}notes.forEach((note,i)=>{const el=document.createElement('div');el.className='nc2';el.style.animationDelay=`${i*.03}s`;const d=new Date(note.c),ti=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}),w=note.t.trim().split(/\s+/).length;el.innerHTML=`<div class="nb"><div class="nt">${esc(note.t)}</div><div class="nm"><span class="nti">${ti}</span><span class="ntg">${w}w</span></div></div><div class="na"><button class="bi" onclick="copy(${JSON.stringify(note.t)})">⎘</button><button class="bi d" onclick="del(${note.id})">×</button></div>`;nl.appendChild(el)})}
+ni.addEventListener('input',()=>{cc.textContent=`${ni.value.length} / 2000`;sb.disabled=!ni.value.trim()});
+ni.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter')save()});
+load();
 </script>
-
 </body>
 </html>
