@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Meal Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0e0c;
+    --surface: #1a1916;
+    --border: #2e2c27;
+    --accent: #c9a84c;
+    --accent-dim: #7a6530;
+    --text: #e8e2d4;
+    --text-muted: #7a7468;
+    --done: #3a6b4a;
+    --done-text: #7ecf99;
+    --danger: #6b3a3a;
+    --danger-text: #cf7e7e;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 20px;
+    background-image: radial-gradient(ellipse at 20% 20%, #1e1c14 0%, transparent 60%),
+                      radial-gradient(ellipse at 80% 80%, #141210 0%, transparent 60%);
+  }
+
+  .container { max-width: 560px; margin: 0 auto; }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    animation: fadeDown 0.4s ease both;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  .loading-dot { display: inline-block; animation: blink 1.2s infinite; }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0; }
+    40% { opacity: 1; }
+  }
+
+  .error-msg {
+    text-align: center;
+    padding: 40px 20px;
+    border: 1px solid var(--danger);
+    border-radius: 4px;
+    background: #1a1212;
+    color: var(--danger-text);
+    font-size: 13px;
+    display: none;
+  }
+
+  /* HEADER */
+  header { margin-bottom: 48px; animation: fadeDown 0.6s ease both; }
+
+  .date-label {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .progress-bar-wrap {
+    margin-top: 20px;
+    background: var(--border);
+    border-radius: 2px;
+    height: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  .progress-text {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* MEAL BLOCKS */
+  .meal-block { margin-bottom: 28px; animation: fadeUp 0.5s ease both; }
+
+  .meal-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .meal-time { font-size: 11px; letter-spacing: 0.15em; color: var(--accent); text-transform: uppercase; }
+  .meal-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--text); }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    user-select: none;
+  }
+
+  .item:hover { border-color: var(--accent-dim); background: #1f1e1a; }
+  .item.checked { background: #1a2b1f; border-color: var(--done); }
+
+  .checkbox {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--text-muted);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .item.checked .checkbox { background: var(--done); border-color: var(--done); }
+
+  .checkmark {
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    color: white;
+    font-size: 11px;
+  }
+
+  .item.checked .checkmark { opacity: 1; transform: scale(1); }
+
+  .item-label { font-size: 13px; color: var(--text); transition: color 0.2s ease; letter-spacing: 0.03em; }
+
+  .item.checked .item-label {
+    color: var(--done-text);
+    text-decoration: line-through;
+    text-decoration-color: var(--done);
+  }
+
+  .item-time {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .item.checked .item-time { opacity: 1; }
+
+  /* BUTTONS */
+  .btn-row { display: flex; gap: 10px; margin-top: 36px; }
+
+  .save-btn {
+    flex: 1;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 4px;
+    color: #0f0e0c;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .save-btn:hover { background: #d4b45a; }
+  .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .reset-btn {
+    flex: 1;
+    padding: 14px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .reset-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.success { background: var(--done); color: var(--done-text); }
+  .toast.error { background: var(--danger); color: var(--danger-text); }
+  .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+  .complete-msg {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid var(--done);
+    border-radius: 4px;
+    background: #1a2b1f;
+  }
+
+  .complete-msg.show { display: block; }
+  .complete-msg p { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--done-text); }
+  .complete-msg small { font-size: 11px; color: var(--text-muted); letter-spacing: 0.1em; }
+
+  /* HISTORY */
+  .history-header {
+    margin-bottom: 32px;
+    animation: fadeDown 0.5s ease both;
+  }
+
+  .history-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; }
+  .history-header h2 span { color: var(--accent); }
+
+  .history-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+
+  .history-day { margin-bottom: 28px; animation: fadeUp 0.4s ease both; }
+
+  .history-day-header {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .history-save {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+
+  .history-save-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .history-save-time { font-size: 10px; letter-spacing: 0.12em; color: var(--accent); text-transform: uppercase; }
+  .history-save-count { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .history-item:last-child { border-bottom: none; }
+  .history-item-name { color: var(--text); letter-spacing: 0.03em; }
+  .history-item-ate-time { font-size: 10px; color: var(--accent); margin-left: 8px; }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <nav class="tabs">
+    <button class="tab active" onclick="showPage('checklist', this)">Today</button>
+    <button class="tab" onclick="showPage('history', this)">History</button>
+  </nav>
+
+  <!-- TODAY PAGE -->
+  <div class="page active" id="page-checklist">
+    <div class="loading" id="loadingMsg">
+      Loading meal plan<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>
+    </div>
+    <div class="error-msg" id="errorMsg">
+      Could not load meal_plan.md. Make sure the file is in the same repo as index.html.
+    </div>
+    <div id="checklistContent" style="display:none;">
+      <header>
+        <div class="date-label" id="dateLabel"></div>
+        <h1>Daily <span>Meal</span> Checklist</h1>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 of 0 completed</div>
+      </header>
+      <div id="mealBlocks"></div>
+      <div class="complete-msg" id="completeMsg">
+        <p>All done for today!</p>
+        <small>Great job sticking to your plan.</small>
+      </div>
+      <div class="btn-row">
+        <button class="save-btn" id="saveBtn" onclick="saveProgress()">Save Progress</button>
+        <button class="reset-btn" onclick="resetAll()">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTORY PAGE -->
+  <div class="page" id="page-history">
+    <div class="history-header">
+      <h2>Meal <span>History</span></h2>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──
+const GITHUB_OWNER = 'timeuncoils';
+const GITHUB_REPO  = 'mealplan';
+const HISTORY_FILE = 'history.md';
+const MEAL_PLAN_FILE = 'meal_plan.md';
+
+let meals = [];
+let totalItems = 0;
+const itemTimestamps = {};
+const githubToken = atob('Z2hwX3h3TDZWUFRTN3h6dFVPR3hsS2pUME0yQ215eTFmcTJrZ0dhNQ==');
+
+
+}
+
+// ── GITHUB API ──
+async function githubGet(path) {
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`, {
+    headers: {
+      'Authorization': `token ${githubToken}`,
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GitHub GET failed: ${res.status}`);
+  return res.json();
+}
+
+async function githubPut(path, content, sha) {
+  const body = {
+    message: `Update ${path}`,
+    content: btoa(unescape(encodeURIComponent(content))),
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${path}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${githubToken}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`GitHub PUT failed: ${res.status}`);
+  return res.json();
+}
+
+// ── FETCH MEAL PLAN FROM GITHUB ──
+async function loadMealPlan() {
+  try {
+    const res = await fetch(`https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/${MEAL_PLAN_FILE}`);
+    if (!res.ok) throw new Error('Failed to fetch meal plan');
+    const text = await res.text();
+    meals = parseMarkdown(text);
+    renderChecklist();
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('checklistContent').style.display = 'block';
+  } catch (err) {
+    document.getElementById('loadingMsg').style.display = 'none';
+    document.getElementById('errorMsg').style.display = 'block';
+  }
+}
+
+// ── MARKDOWN PARSER ──
+function parseMarkdown(md) {
+  const result = [];
+  let current = null;
+  for (let line of md.split('\n')) {
+    line = line.trim();
+    if (!line) continue;
+    if (line.startsWith('## ')) {
+      if (current) result.push(current);
+      current = { name: line.replace('## ', ''), time: '', items: [] };
+    } else if (current && line.startsWith('time:')) {
+      current.time = line.replace('time:', '').trim();
+    } else if (current && line.startsWith('- ')) {
+      current.items.push(line.replace('- ', ''));
+    }
+  }
+  if (current) result.push(current);
+  return result;
+}
+
+// ── RENDER CHECKLIST ──
+function renderChecklist() {
+  const container = document.getElementById('mealBlocks');
+  container.innerHTML = '';
+  totalItems = 0;
+
+  meals.forEach((meal, mi) => {
+    totalItems += meal.items.length;
+    const block = document.createElement('div');
+    block.className = 'meal-block';
+    block.style.animationDelay = `${0.1 + mi * 0.1}s`;
+    block.innerHTML = `
+      <div class="meal-header">
+        <span class="meal-time">${meal.time}</span>
+        <span class="meal-name">${meal.name}</span>
+      </div>
+      ${meal.items.map((item, ii) => `
+        <div class="item" onclick="toggle(this, ${mi}, ${ii})" data-meal="${mi}" data-item="${ii}">
+          <div class="checkbox"><span class="checkmark">&#10003;</span></div>
+          <span class="item-label">${item}</span>
+          <span class="item-time" id="itime-${mi}-${ii}"></span>
+        </div>`).join('')}`;
+    container.appendChild(block);
+  });
+
+  updateProgress();
+  document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+}
+
+// ── CHECKLIST LOGIC ──
+function toggle(el, mi, ii) {
+  el.classList.toggle('checked');
+  const key = `${mi}-${ii}`;
+  if (el.classList.contains('checked')) {
+    const t = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    itemTimestamps[key] = t;
+    document.getElementById(`itime-${mi}-${ii}`).textContent = t;
+  } else {
+    delete itemTimestamps[key];
+    document.getElementById(`itime-${mi}-${ii}`).textContent = '';
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const checked = document.querySelectorAll('.item.checked').length;
+  const pct = totalItems > 0 ? Math.round((checked / totalItems) * 100) : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${checked} of ${totalItems} completed`;
+  document.getElementById('completeMsg').classList.toggle('show', checked === totalItems && totalItems > 0);
+}
+
+function resetAll() {
+  document.querySelectorAll('.item').forEach(el => el.classList.remove('checked'));
+  for (const key in itemTimestamps) delete itemTimestamps[key];
+  document.querySelectorAll('.item-time').forEach(el => el.textContent = '');
+  updateProgress();
+}
+
+// ── SAVE TO GITHUB ──
+async function saveProgress() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const now = new Date();
+    const savedAt = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const dateKey = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Build new entry as markdown
+    let entry = `\n## ${dateKey} — ${savedAt}\n\n`;
+    meals.forEach((meal, mi) => {
+      const eatenItems = meal.items.filter((_, ii) => {
+        return !!document.querySelector(`.item[data-meal="${mi}"][data-item="${meal.items.indexOf(_)}"]`)?.classList.contains('checked');
+      });
+      // Re-check using index
+      const eatenByIndex = meal.items.filter((item, ii) => {
+        return !!document.querySelector(`.item[data-meal="${mi}"][data-item="${ii}"]`)?.classList.contains('checked');
+      });
+
+      if (eatenByIndex.length === 0) return;
+      entry += `### ${meal.name} (${meal.time})\n\n`;
+      eatenByIndex.forEach((item, ii) => {
+        const globalIi = meal.items.indexOf(item);
+        const ateAt = itemTimestamps[`${mi}-${globalIi}`] || '';
+        entry += `- ${item}${ateAt ? ` _(@ ${ateAt})_` : ''}\n`;
+      });
+      entry += '\n';
+    });
+
+    // Fetch existing history.md
+    const existing = await githubGet(HISTORY_FILE);
+    let currentContent = '';
+    let sha = null;
+
+    if (existing) {
+      currentContent = decodeURIComponent(escape(atob(existing.content.replace(/\n/g, ''))));
+      sha = existing.sha;
+    } else {
+      currentContent = '# Meal History\n';
+    }
+
+    const newContent = currentContent + entry;
+    await githubPut(HISTORY_FILE, newContent, sha);
+
+    showToast('Saved to GitHub!', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Save failed. Check your token.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save Progress';
+  }
+}
+
+// ── LOAD HISTORY FROM GITHUB ──
+async function loadHistory() {
+  const content = document.getElementById('historyContent');
+  content.innerHTML = '<div class="loading">Loading history<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>';
+
+  try {
+    const file = await githubGet(HISTORY_FILE);
+    if (!file) {
+      content.innerHTML = '<div class="history-empty">No history yet.<br>Tick your meals and hit Save!</div>';
+      return;
+    }
+
+    const md = decodeURIComponent(escape(atob(file.content.replace(/\n/g, ''))));
+    renderHistory(md, content);
+  } catch (err) {
+    content.innerHTML = '<div class="history-empty" style="border-color:var(--danger);color:var(--danger-text);">Failed to load history. Check your token.</div>';
+  }
+}
+
+// ── PARSE & RENDER HISTORY MARKDOWN ──
+function renderHistory(md, container) {
+  container.innerHTML = '';
+  const lines = md.split('\n');
+
+  // Group by day (## heading)
+  const days = [];
+  let currentDay = null;
+  let currentMeal = null;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (line.startsWith('## ')) {
+      if (currentDay) {
+        if (currentMeal) { currentDay.meals.push(currentMeal); currentMeal = null; }
+        days.push(currentDay);
+      }
+      currentDay = { title: line.replace('## ', ''), meals: [] };
+    } else if (currentDay && line.startsWith('### ')) {
+      if (currentMeal) currentDay.meals.push(currentMeal);
+      currentMeal = { name: line.replace('### ', ''), items: [] };
+    } else if (currentMeal && line.startsWith('- ')) {
+      currentMeal.items.push(line.replace('- ', ''));
+    }
+  }
+  if (currentMeal && currentDay) currentDay.meals.push(currentMeal);
+  if (currentDay) days.push(currentDay);
+
+  if (days.length === 0) {
+    container.innerHTML = '<div class="history-empty">No history yet.<br>Tick your meals and hit Save!</div>';
+    return;
+  }
+
+  // Render newest first
+  days.reverse().forEach((day, di) => {
+    const dayBlock = document.createElement('div');
+    dayBlock.className = 'history-day';
+    dayBlock.style.animationDelay = `${di * 0.06}s`;
+    dayBlock.innerHTML = `<div class="history-day-header">${day.title}</div>`;
+
+    day.meals.forEach(meal => {
+      const saveEl = document.createElement('div');
+      saveEl.className = 'history-save';
+
+      const itemsHTML = meal.items.map(item => {
+        // Extract time if present: "food item _(@ 1:30 PM)_"
+        const timeMatch = item.match(/_\(@\s(.+?)\)_/);
+        const label = item.replace(/_\(@ .+?\)_/, '').trim();
+        const ateAt = timeMatch ? timeMatch[1] : null;
+        return `
+          <div class="history-item">
+            <span class="history-item-name">${label}</span>
+            ${ateAt ? `<span class="history-item-ate-time">@ ${ateAt}</span>` : ''}
+          </div>`;
+      }).join('');
+
+      saveEl.innerHTML = `
+        <div class="history-save-meta">
+          <span class="history-save-time">${meal.name}</span>
+          <span class="history-save-count">${meal.items.length} eaten</span>
+        </div>
+        ${itemsHTML}`;
+
+      dayBlock.appendChild(saveEl);
+    });
+
+    container.appendChild(dayBlock);
+  });
+}
+
+// ── TOAST ──
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── PAGE SWITCH ──
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`page-${name}`).classList.add('active');
+  tab.classList.add('active');
+  if (name === 'history') loadHistory();
+}
+
+// ── INIT ──
+loadMealPlan();
+</script>
+</body>
+</html>
